@@ -1,7 +1,4 @@
 import logging
-from functools import lru_cache
-
-import torch
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +41,8 @@ def load_text_model():
 
 def encode_text_clip(text: str) -> list[float]:
     """CLIP 텍스트 인코딩 → 512d 벡터"""
+    import torch
+
     model, _, tokenizer = load_clip()
     tokens = tokenizer([text])
     with torch.no_grad():
@@ -54,6 +53,8 @@ def encode_text_clip(text: str) -> list[float]:
 
 def encode_image_clip(image) -> list[float]:
     """CLIP 이미지 인코딩 → 512d 벡터"""
+    import torch
+
     model, preprocess, _ = load_clip()
     image_tensor = preprocess(image).unsqueeze(0)
     with torch.no_grad():
