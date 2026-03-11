@@ -11,11 +11,6 @@ venv/
 .venv/
 env/
 
-# Node.js
-node_modules/
-.next/
-out/
-
 # Environment
 .env
 .env.local
@@ -35,14 +30,13 @@ Thumbs.db
 # Build
 *.log
 
-# Docker
-postgres_data/
-qdrant_data/
-
 # ML models cache
 *.pt
 *.bin
 *.safetensors
+
+# DB
+images.db
 
 # Claude
 .claude/

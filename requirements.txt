@@ -1,0 +1,17 @@
+# Web
+fastapi
+uvicorn[standard]
+jinja2
+
+# ML
+torch
+open-clip-torch
+transformers
+accelerate
+qwen-vl-utils
+
+# Image
+Pillow
+
+# Core
+numpy

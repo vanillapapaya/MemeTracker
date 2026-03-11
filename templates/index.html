@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemeTracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #0a0a0a;
+            border-bottom: 1px solid #222;
+            padding: 16px 24px;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 700;
+            white-space: nowrap;
+            color: #fff;
+        }
+
+        .search-box {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #151515;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus { border-color: #666; }
+        .search-box input::placeholder { color: #555; }
+
+        .search-box button {
+            padding: 10px 20px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .search-box button:hover { background: #1d4ed8; }
+
+        .stats {
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #151515;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #222;
+            transition: border-color 0.2s, transform 0.2s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            border-color: #444;
+            transform: translateY(-2px);
+        }
+
+        .card img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            display: block;
+            background: #1a1a1a;
+        }
+
+        .card-info {
+            padding: 10px 12px;
+        }
+
+        .card-filename {
+            font-size: 12px;
+            color: #888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 4px;
+        }
+
+        .card-tags {
+            font-size: 12px;
+            color: #aaa;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .tag {
+            background: #222;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: #777;
+            margin-top: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .score-badge {
+            font-size: 11px;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* 모달 (이미지 상세) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            gap: 24px;
+            background: #151515;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-img {
+            max-width: 600px;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        .modal-info {
+            padding: 24px;
+            min-width: 250px;
+            overflow-y: auto;
+        }
+
+        .modal-info h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .modal-info .card-tags { margin-bottom: 12px; }
+        .modal-info .card-desc {
+            -webkit-line-clamp: unset;
+            color: #aaa;
+        }
+
+        .load-more {
+            display: block;
+            margin: 32px auto;
+            padding: 12px 32px;
+            background: #222;
+            color: #ccc;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .load-more:hover { background: #2a2a2a; }
+
+        @media (max-width: 768px) {
+            .header-inner { flex-wrap: wrap; }
+            .stats { display: none; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+            .modal-content { flex-direction: column; }
+            .modal-img { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <h1>MemeTracker</h1>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="검색어 입력... (예: 놀란 고양이, 애니 밈)" autofocus>
+            <button onclick="doSearch()">검색</button>
+        </div>
+        <div class="stats" id="stats">{{ total }}개 이미지</div>
+    </div>
+</header>
+
+<main>
+    <div id="status" class="status">검색어를 입력하거나 스크롤하여 이미지를 둘러보세요</div>
+    <div id="grid" class="grid"></div>
+    <button id="loadMore" class="load-more" style="display:none" onclick="loadMore()">더 보기</button>
+</main>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <img class="modal-img" id="modalImg" src="" alt="">
+        <div class="modal-info" id="modalInfo"></div>
+    </div>
+</div>
+
+<script>
+const grid = document.getElementById('grid');
+const status = document.getElementById('status');
+const searchInput = document.getElementById('searchInput');
+const loadMoreBtn = document.getElementById('loadMore');
+
+let currentMode = 'browse'; // 'browse' or 'search'
+let browseOffset = 0;
+let currentQuery = '';
+const PAGE_SIZE = 40;
+
+// 페이지 로드 시 최신 이미지 표시
+window.addEventListener('DOMContentLoaded', () => {
+    loadBrowse();
+});
+
+searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+});
+
+async function doSearch() {
+    const q = searchInput.value.trim();
+    if (!q) {
+        // 검색어 비어있으면 브라우즈 모드로
+        currentMode = 'browse';
+        browseOffset = 0;
+        grid.innerHTML = '';
+        loadBrowse();
+        return;
+    }
+
+    currentMode = 'search';
+    currentQuery = q;
+    grid.innerHTML = '';
+    status.textContent = '검색 중...';
+    loadMoreBtn.style.display = 'none';
+
+    try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=${PAGE_SIZE}`);
+        const data = await res.json();
+
+        if (data.results.length === 0) {
+            status.textContent = `"${q}" 검색 결과 없음`;
+            return;
+        }
+
+        status.textContent = `"${q}" 검색 결과: ${data.results.length}개 (전체 ${data.total}개 중)`;
+        data.results.forEach(item => grid.appendChild(createCard(item, true)));
+    } catch (err) {
+        status.textContent = '검색 오류: ' + err.message;
+    }
+}
+
+async function loadBrowse() {
+    status.textContent = browseOffset === 0 ? '로딩 중...' : status.textContent;
+
+    try {
+        const res = await fetch(`/api/browse?offset=${browseOffset}&limit=${PAGE_SIZE}`);
+        const data = await res.json();
+
+        if (data.results.length === 0 && browseOffset === 0) {
+            status.textContent = '인덱싱된 이미지가 없습니다. python index.py로 먼저 인덱싱하세요.';
+            return;
+        }
+
+        if (browseOffset === 0) {
+            status.textContent = `전체 ${data.total}개 이미지`;
+        }
+
+        data.results.forEach(item => grid.appendChild(createCard(item, false)));
+        browseOffset += data.results.length;
+
+        loadMoreBtn.style.display = browseOffset < data.total ? 'block' : 'none';
+    } catch (err) {
+        status.textContent = '로딩 오류: ' + err.message;
+    }
+}
+
+function loadMore() {
+    if (currentMode === 'browse') loadBrowse();
+}
+
+function createCard(item, showScore) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openModal(item);
+
+    const tags = item.tags ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const tagHTML = tags.slice(0, 4).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('');
+    const scoreHTML = showScore && item.score ? `<span class="score-badge">${(item.score * 100).toFixed(1)}%</span>` : '';
+
+    card.innerHTML = `
+        <img src="${item.image_url}" alt="${escapeHTML(item.filename)}" loading="lazy"
+             onerror="this.style.display='none'">
+        <div class="card-info">
+            <div class="card-filename">${escapeHTML(item.filename)} ${scoreHTML}</div>
+            ${tagHTML ? `<div class="card-tags">${tagHTML}</div>` : ''}
+            ${item.description ? `<div class="card-desc">${escapeHTML(item.description)}</div>` : ''}
+        </div>
+    `;
+    return card;
+}
+
+function openModal(item) {
+    const modal = document.getElementById('modal');
+    const img = document.getElementById('modalImg');
+    const info = document.getElementById('modalInfo');
+
+    img.src = item.image_url;
+
+    const tags = item.tags ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const tagHTML = tags.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('');
+
+    info.innerHTML = `
+        <h3>${escapeHTML(item.filename)}</h3>
+        ${item.score ? `<p class="score-badge" style="margin-bottom:12px">유사도: ${(item.score * 100).toFixed(1)}%</p>` : ''}
+        ${tagHTML ? `<div class="card-tags">${tagHTML}</div>` : ''}
+        ${item.description ? `<div class="card-desc">${escapeHTML(item.description)}</div>` : ''}
+    `;
+
+    modal.classList.add('active');
+    document.addEventListener('keydown', escHandler);
+}
+
+function closeModal(e) {
+    if (e.target === document.getElementById('modal') || !e) {
+        document.getElementById('modal').classList.remove('active');
+        document.removeEventListener('keydown', escHandler);
+    }
+}
+
+function escHandler(e) {
+    if (e.key === 'Escape') {
+        document.getElementById('modal').classList.remove('active');
+        document.removeEventListener('keydown', escHandler);
+    }
+}
+
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+</script>
+
+</body>
+</html>

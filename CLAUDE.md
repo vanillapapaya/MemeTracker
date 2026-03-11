@@ -1,57 +1,53 @@
-# MemeTracker
+# MemeTracker v2
 
-짤과 원작자를 연결하는 검색 엔진 + 짤 피드 플랫폼.
+로컬 이미지 자동 태깅 + 검색 시스템. GPU 서버에서 VLM 태깅 + CLIP 임베딩, 브라우저로 검색.
 
-## Project Overview
+## Architecture
 
-- **Search**: Natural language text → image search using hybrid vector search (CLIP visual + e5-large semantic)
-- **Feed**: Short-form swipe UI with vector-based recommendations (70% recommended + 30% random)
-- **Creator Connection**: Link memes to original creators with profile pages and source tracking
+- **index.py**: 이미지 폴더 스캔 → Qwen2.5-VL-7B 한국어 태깅 → CLIP ViT-B/32 임베딩 → SQLite 저장
+- **app.py**: FastAPI 웹 서버 (검색 API + 이미지 서빙)
+- **templates/index.html**: 검색 UI (단일 HTML + vanilla JS)
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Backend | FastAPI (Python), Celery/ARQ |
-| Frontend | Next.js 14+ (App Router), Tailwind CSS, Swiper.js, Zustand |
-| Vector DB | Qdrant (CLIP 512d + e5-large 1024d) |
-| RDB | PostgreSQL |
-| Cache | Redis |
-| Storage | Cloudflare R2 (images), Cloudflare Images (resize) |
-| AI/ML | CLIP (ViT-B/32), multilingual-e5-large, Claude Vision (captioning), Falconsai NSFW filter |
-| Hosting | Railway (backend), Vercel (frontend), Cloudflare (CDN/domain) |
+| 항목 | 선택 |
+|------|------|
+| VLM | Qwen2.5-VL-7B-Instruct (한국어 태그/설명 생성) |
+| 임베딩 | CLIP ViT-B/32 (open_clip, 512d) |
+| DB | SQLite (images.db) |
+| 웹 | FastAPI + Jinja2 + uvicorn |
+| 프론트 | 단일 HTML + vanilla JS |
 
 ## Project Structure
 
 ```
-docs/                         # Design documents (Korean)
-  00-프로젝트-개요.md           # Project overview
-  01-기술-아키텍처.md           # Technical architecture & DB schema
-  02-데이터-파이프라인.md        # Data sources & collection pipeline
-  03-API-명세.md               # Backend API spec
-  04-프론트엔드-명세.md          # Frontend UI/UX spec
-  05-인프라-및-배포.md           # Infrastructure & deployment
-  06-법적-체크리스트.md          # Legal checklist (copyright, opt-out)
-  07-개발-로드맵.md             # Development roadmap (10 weeks, 7 phases)
-  08-토론-요약.md               # Discussion summary
-multi_agent_discussion.py     # Multi-agent risk analysis tool (Anthropic API)
-discussion_result.md          # Discussion output
+index.py              # 이미지 인덱서 (GPU 서버에서 실행)
+app.py                # 웹 서버 (GPU 서버에서 실행)
+templates/
+  index.html          # 검색 UI
+requirements.txt      # Python 의존성
+images.db             # 생성되는 SQLite DB (gitignore)
+docs/                 # 설계 문서 (한국어)
 ```
 
-## Development Phases
+## Usage
 
-- Phase 0: Demand validation (fake door landing page)
-- Phase 1: Data collection + infra (seed 1,000 images)
-- Phase 2: Search MVP (FastAPI + Next.js)
-- Phase 3: Feed MVP (swipe UI + basic recommendations)
-- Phase 4: Multi-source expansion (Safebooru, X API, Danbooru)
-- Phase 5: Creator system (profiles, OAuth, opt-out)
-- Phase 6: Monetization (interstitial ads)
+```bash
+# GPU 서버 (Windows, RTX 5080)
+pip install -r requirements.txt
+
+# 1. 인덱싱
+python index.py /path/to/images
+
+# 2. 웹 서버 실행
+python app.py --images /path/to/images
+
+# Mac 브라우저에서 접속
+# http://192.168.0.75:8000
+```
 
 ## Conventions
 
 - Documentation language: Korean
 - Code comments: Korean or English
-- Use Python type hints in backend code
-- Follow FastAPI async patterns
-- Use Next.js App Router conventions
+- Python type hints 사용
